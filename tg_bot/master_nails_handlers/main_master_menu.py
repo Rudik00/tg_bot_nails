@@ -5,6 +5,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from .states import BookingState
 from .add_work_days import records_work_days
+from .add_week_days import records_week_days
 
 router = Router()
 
@@ -44,7 +45,11 @@ async def menu_callback_handler(
         )
 
     elif menu_item == "2":
-        await message.answer("Ты выбрал: Добавить выходные")
+        await records_week_days(
+            message,
+            state,
+            callback_query.from_user.id,
+        )
 
     elif menu_item == "3":
         await message.answer("Ты выбрал: Мои записи")

@@ -21,6 +21,9 @@ from .master_nails_handlers.add_master import (
 from .master_nails_handlers.remove_master import (
     router as remove_master_router,
 )
+from .master_nails_handlers.add_week_days import (
+    router as add_week_days_router,
+)
 
 from .basic_handlers import info_handler as show_info
 from .basic_handlers import start_handler as show_start
@@ -93,6 +96,7 @@ async def main_tg_bot(token: str):
     dp.include_router(add_work_days_router)
     dp.include_router(add_master_router)
     dp.include_router(remove_master_router)
+    dp.include_router(add_week_days_router)
     try:
         await dp.start_polling(bot)
     finally:

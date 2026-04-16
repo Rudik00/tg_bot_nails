@@ -44,9 +44,9 @@ async def process_work_days(message: Message, state: FSMContext):
         )
     else:
         master_id = message.from_user.id
-        text = await add_work_days_db_handler(master_id, work_days)
+        answer = await add_work_days_db_handler(master_id, work_days)
 
-        if text:
+        if answer:
             await message.answer(
                 f"Твои прабочие дни добавлены в график.\n"
                 f"Работаешь в следующие дни: {', '.join(work_days)}"
