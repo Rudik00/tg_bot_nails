@@ -10,8 +10,8 @@ from aiogram.types import Message
 
 from .basic_handlers import info_handler as show_info
 from .basic_handlers import start_handler as show_start
-from .booking_handlers import new_entry_handler as start_new_entry
-from .booking_handlers import router as booking_router
+from .new_entry_hendlers.booking_handlers import new_entry_handler as start_new_entry
+from .new_entry_hendlers.booking_handlers import router as booking_router
 
 
 dp = Dispatcher(storage=MemoryStorage())

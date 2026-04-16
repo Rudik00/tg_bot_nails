@@ -6,6 +6,7 @@ from aiogram.types import CallbackQuery, Message
 
 from .booking_utils import get_available_time_slots, shift_month
 from .calendar_keyboard import create_calendar_keyboard
+from .confirmation_keyboard import create_confirmation_keyboard
 from .master_keyboard import create_master_keyboard
 from .service_keyboard import choice_service
 from .states import BookingState
@@ -13,6 +14,16 @@ from .time_keyboard import create_time_keyboard
 
 
 router = Router()
+
+
+def build_booking_summary(data: dict) -> str:
+    return (
+        "Всё верно?\n"
+        f"Услуга: {data.get('service')}\n"
+        f"Дата: {data.get('date')}\n"
+        f"Время: {data.get('time')}\n"
+        f"Мастер: {data.get('master')}"
+    )
 
 
 async def new_entry_handler(message: Message, state: FSMContext):
@@ -116,8 +127,25 @@ async def master_callback_handler(
     callback_query: CallbackQuery,
     state: FSMContext,
 ):
-    # Финальный шаг: подтверждаем запись и очищаем состояние.
+    # После выбора мастера показываем итоговое подтверждение.
     selected_master = callback_query.data.split(":", maxsplit=1)[1]
+    await state.update_data(master=selected_master)
+    await state.set_state(BookingState.confirming_booking)
+    data = await state.get_data()
+
+    await callback_query.message.edit_text(
+        build_booking_summary(data),
+        reply_markup=create_confirmation_keyboard(),
+    )
+    await callback_query.answer()
+
+
+@router.callback_query(lambda c: c.data == "confirm:yes")
+async def confirm_booking_handler(
+    callback_query: CallbackQuery,
+    state: FSMContext,
+):
+    # Финальный шаг: подтверждаем запись и очищаем состояние.
     data = await state.get_data()
 
     await callback_query.message.edit_text(
@@ -125,7 +153,17 @@ async def master_callback_handler(
         f"Услуга: {data.get('service')}\n"
         f"Дата: {data.get('date')}\n"
         f"Время: {data.get('time')}\n"
-        f"Мастер: {selected_master}"
+        f"Мастер: {data.get('master')}"
     )
     await state.clear()
     await callback_query.answer("Готово")
+
+
+@router.callback_query(lambda c: c.data == "confirm:cancel")
+async def cancel_booking_handler(
+    callback_query: CallbackQuery,
+    state: FSMContext,
+):
+    await callback_query.message.edit_text("Запись отменена")
+    await state.clear()
+    await callback_query.answer("Отменено")
