@@ -31,21 +31,25 @@ async def menu_callback_handler(
     callback_query: CallbackQuery,
     state: FSMContext,
 ):
-    # извликаем выбранного пункта меню
+    # извлекаем выбранного пункта меню
     menu_item = callback_query.data.split("_")[1]
-    menu_message = callback_query.message
-
-    await callback_query.answer("Ты выбрал пункт меню: " + menu_item)
-    await menu_message.delete()
+    await callback_query.message.delete()
+    message = callback_query.message
 
     if menu_item == "1":
-        await records_work_days(menu_message, state)
+        await records_work_days(
+            message,
+            state,
+            callback_query.from_user.id,
+        )
 
     elif menu_item == "2":
-        await menu_message.answer("Ты выбрал: Добавить выходные")
+        await message.answer("Ты выбрал: Добавить выходные")
 
     elif menu_item == "3":
-        await menu_message.answer("Ты выбрал: Мои записи")
+        await message.answer("Ты выбрал: Мои записи")
 
     elif menu_item == "4":
-        await menu_message.answer("Ты выбрал: Мой график")
+        await message.answer("Ты выбрал: Мой график")
+
+    await callback_query.answer()

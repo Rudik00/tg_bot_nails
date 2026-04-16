@@ -5,11 +5,17 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from .states import BookingState
 from ..database.remove_master_db import remove_master_db_handler
+from ..database.user_verification import verification_master
 
 router = Router()
 
 
 async def remove_master_handler(message: Message, state: FSMContext):
+    # Проверяем, является ли пользователь мастером
+    is_master = await verification_master(message.from_user.id)
+    if not is_master:
+        await message.answer("Извините, но вы не являетесь мастером и не можете удалить себя из числа мастеров.")
+        return
     # инлайн клавиши для подтверждения удаления
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
