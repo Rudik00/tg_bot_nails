@@ -15,7 +15,7 @@ from .time_keyboard import create_time_keyboard
 
 router = Router()
 
-
+# Функция для сборки итогового текста подтверждения записи.
 def build_booking_summary(data: dict) -> str:
     return (
         "Всё верно?\n"
@@ -25,22 +25,22 @@ def build_booking_summary(data: dict) -> str:
         f"Мастер: {data.get('master')}"
     )
 
-
-async def new_entry_handler(message: Message, state: FSMContext):
     # Первый шаг записи: выбор услуги.
+async def new_entry_handler(message: Message, state: FSMContext):
+    # функция генерации клафиатуры услуг
     keyboard = choice_service()
     await state.set_state(BookingState.choosing_service)
     await message.answer(
         "Выбери услугу которая тебе нужна", reply_markup=keyboard
     )
 
-
+# отлов выбора услуги и переход к выбору даты
 @router.callback_query(lambda c: c.data.startswith("service_"))
 async def service_callback_handler(
     callback_query: CallbackQuery,
     state: FSMContext,
 ):
-    # После выбора услуги показываем календарь дат.
+    # извликаем выбранную услугу и сегодняшнюю дату
     service = callback_query.data.split("_")[1]
     today = date.today()
 
@@ -48,6 +48,7 @@ async def service_callback_handler(
     await state.set_state(BookingState.choosing_date)
     await callback_query.message.edit_text(
         f"Ты выбрал услугу {service}.\nТеперь выбери дату:",
+        # генерируем клавиатуру с календарем
         reply_markup=create_calendar_keyboard(today.year, today.month),
     )
     await callback_query.answer()
@@ -70,6 +71,7 @@ async def calendar_navigation_handler(callback_query: CallbackQuery):
     target_year, target_month = shift_month(int(year), int(month), delta)
     today = date.today()
 
+    # Защита от ухода в прошлые месяцы.
     if date(target_year, target_month, 1) < date(today.year, today.month, 1):
         target_year = today.year
         target_month = today.month
@@ -79,7 +81,7 @@ async def calendar_navigation_handler(callback_query: CallbackQuery):
     )
     await callback_query.answer()
 
-
+# Отлов выбора дня и переход к выбору времени.
 @router.callback_query(lambda c: c.data.startswith("cal:day:"))
 async def calendar_day_handler(
     callback_query: CallbackQuery,
@@ -104,7 +106,7 @@ async def calendar_day_handler(
     )
     await callback_query.answer()
 
-
+# Отлов выбора времени и переход к выбору мастера.
 @router.callback_query(lambda c: c.data.startswith("time:"))
 async def time_callback_handler(
     callback_query: CallbackQuery,
@@ -121,7 +123,7 @@ async def time_callback_handler(
     )
     await callback_query.answer()
 
-
+# Отлов выбора мастера и переход к подтверждению записи.
 @router.callback_query(lambda c: c.data.startswith("master:"))
 async def master_callback_handler(
     callback_query: CallbackQuery,
@@ -139,7 +141,7 @@ async def master_callback_handler(
     )
     await callback_query.answer()
 
-
+# Отлов подтверждения записи и финальное сообщение.
 @router.callback_query(lambda c: c.data == "confirm:yes")
 async def confirm_booking_handler(
     callback_query: CallbackQuery,
