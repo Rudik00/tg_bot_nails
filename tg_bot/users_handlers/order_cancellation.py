@@ -1,4 +1,5 @@
 from aiogram import Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup, Message
@@ -63,6 +64,38 @@ def _build_booking_summary_html(booking: Client) -> str:
         f"Время: {booking.booking_time.strftime('%H:%M')}\n"
         f"Мастер: {escape_html_text(booking.master_name)}\n"
         f"Ссылка для связи: {master_contact}"
+    )
+
+
+def _build_master_cancellation_notification_html(
+    booking: Client,
+) -> str:
+    service: Service | None = booking.service
+    service_name = service.name if service is not None else "-"
+    price_text = (
+        str(service.price)
+        if service is not None and service.price is not None
+        else "-"
+    )
+    duration_text = (
+        f"{service.time_services} мин"
+        if service is not None and service.time_services is not None
+        else "-"
+    )
+    client_contact = build_contact_link_html(
+        booking.client_username,
+        booking.client_telegram_id,
+        "Связаться с клиентом",
+    )
+
+    return (
+        "<b>Клиент отменил запись</b>\n"
+        f"Услуга: {escape_html_text(service_name)}\n"
+        f"Стоимость: {escape_html_text(price_text)}\n"
+        f"Длительность: {escape_html_text(duration_text)}\n"
+        f"Дата: {booking.booking_date.strftime('%d.%m.%Y')}\n"
+        f"Время: {booking.booking_time.strftime('%H:%M')}\n"
+        f"Клиент: {client_contact}"
     )
 
 
@@ -136,6 +169,14 @@ async def confirm_cancellation_handler(
         f"{summary}\n\n<b>Запись отменена.</b>",
         parse_mode="HTML",
     )
+    try:
+        await callback_query.bot.send_message(
+            booking.master_telegram_id,
+            _build_master_cancellation_notification_html(booking),
+            parse_mode="HTML",
+        )
+    except TelegramBadRequest:
+        pass
     await callback_query.answer("Запись отменена")
 
 
