@@ -19,6 +19,7 @@ class Master(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(BigInteger, unique=True, nullable=False)
+    username = Column(String, nullable=True)
     name = Column(String, nullable=False)
     # Пример хранения: "пн,вт,ср,чт,пт"
     work_days = Column(String, nullable=True)
@@ -72,6 +73,7 @@ class Client(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     client_telegram_id = Column(BigInteger, nullable=False, index=True)
+    client_username = Column(String, nullable=True)
     service_id = Column(
         Integer,
         ForeignKey("services.id", ondelete="RESTRICT"),
@@ -80,6 +82,7 @@ class Client(Base):
     booking_date = Column(Date, nullable=False)
     booking_time = Column(Time, nullable=False)
     master_telegram_id = Column(BigInteger, nullable=False, index=True)
+    master_username = Column(String, nullable=True)
     master_name = Column(String, nullable=False)
 
     service = relationship("Service", back_populates="bookings")

@@ -58,10 +58,27 @@ _DEFAULT_SERVICES = [
 ]
 
 
+async def _apply_schema_updates() -> None:
+    async with engine.begin() as conn:
+        await conn.exec_driver_sql(
+            "ALTER TABLE masters "
+            "ADD COLUMN IF NOT EXISTS username VARCHAR"
+        )
+        await conn.exec_driver_sql(
+            "ALTER TABLE clients "
+            "ADD COLUMN IF NOT EXISTS client_username VARCHAR"
+        )
+        await conn.exec_driver_sql(
+            "ALTER TABLE clients "
+            "ADD COLUMN IF NOT EXISTS master_username VARCHAR"
+        )
+
+
 async def init_db() -> None:
     # Создаёт только таблицы, если их ещё нет.
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await _apply_schema_updates()
 
 
 async def seed_services() -> None:
